@@ -2,7 +2,7 @@ import React from 'react'
 import { ThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import { CssBaseline } from '@material-ui/core';
 
-import ExaminPanel from './components/ExaminPanel'
+import NewExaminPanel from './components/NewExaminPanel';
 
 const App = () => {
 
@@ -22,7 +22,7 @@ const App = () => {
     <div>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <ExaminPanel />      
+        <NewExaminPanel />      
       </ThemeProvider>
     </div>
   )

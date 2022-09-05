@@ -7,16 +7,10 @@ import 'codemirror/mode/css/css';
 import { Controlled as ControlledEditor } from 'react-codemirror2';
 import './Editor.css';
 
-// import CodeMirror from '@uiw/react-codemirror';
-
-// import { makeStyles } from '@material-ui/core/styles';
-
 export default function Editor(props) {
 	const { language, displayName, value, onChange } = props;
-	// const [open, setOpen] = useState(true)
 
 	function handleChange(editor, data, value) {
-		// onChange === setCode(value) where value === code
 		onChange(value);
 	}
 

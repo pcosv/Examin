@@ -153,6 +153,9 @@ const useStyles = makeStyles((theme: Theme) => ({
   },
   copyText: {
     padding: theme.spacing(2),
+  },
+  section: {
+    marginTop: theme.spacing(3),
   }
 }));
 

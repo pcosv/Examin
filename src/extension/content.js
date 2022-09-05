@@ -3,7 +3,7 @@
 
 // Runs when user navigates to localhost:3000
 
-console.log('Chrome Extension READY!!');
+// console.log('Chrome Extension READY!!');
 
 let firstRun = true;
 
@@ -12,7 +12,7 @@ let firstRun = true;
 window.addEventListener('message', (request, sender, sendResponse) => {
 	// the shape of request.data = { type: 'addTest', message: [(testArray)] }
 	if (request.data.type === 'addTest') {
-		console.log('in content.js, request.data: ', request.data);
+		// console.log('in content.js, request.data: ', request.data);
 		// Send a message to background.js with the shape { action: 'addTest', message: [(testArray)] }
 		return chrome.runtime.sendMessage({
 			action: request.data.type,
@@ -25,11 +25,11 @@ window.addEventListener('message', (request, sender, sendResponse) => {
 // Listener for Chrome Browser --------------------------------------------
 // Chrome Listening for messeges in the browser, if it recieves a 'message' (listening for background.js)
 chrome.runtime.onMessage.addListener((request) => {
-	console.log('Recieved a msg from background.js, request is: ', request);
+	// console.log('Recieved a msg from background.js, request is: ', request);
 
 	if (request.name === 'initial panel load') {
 		// Send a message back to background.js to initialize the initial state
-		console.log('In initial panel load!');
+		// console.log('In initial panel load!');
 		chrome.runtime.sendMessage({ action: 'initial panel load' });
 	} else if (request.name === 'pauseClicked' && request.tabId) {
 		// Send a postMessage to window to forward request to injected.js

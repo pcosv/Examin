@@ -131,8 +131,8 @@ const testGenerator: TestGenerator = (componentData) => {
 				}
 			}
 			// Push the current element's props into the describeBlock
-			console.log('temp props log: ', tempProps);
-			console.log('strigified props', JSON.stringify(currentProps));
+			// console.log('temp props log: ', tempProps);
+			// console.log('strigified props', JSON.stringify(currentProps));
 			// `
 			// );
 			describeBlockArray.push(

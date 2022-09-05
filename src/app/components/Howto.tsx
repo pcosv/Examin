@@ -5,24 +5,21 @@ const source = `
 # How to Use 
 
 **1. Setup**
-   - **Install Jest/Enzyme** for your project <br/>
-      ${`npm install jest enzyme enzyme-adapter-react-16 @babel/core @babel/preset-env`}
-   - Add **presets** to your .babelrc file <br/>
-      { "presets": ["@babel/preset-env", "@babel/preset-react"] } 
-   - Must have **React DevTools** extenion installed
+   - Must have **React Testing Library** installed
+   - Must have **React DevTools** extension installed
    - Must be in developer mode (no minification or uglification)
    
-**2. Select Unit Tests**
-   - Select the components you want to test
+**2. Create Unit Tests**
+   - Select the component you want to create tests for
+   - Give the test a name
+   - Start recording your actions while interacting with the component
+   - Press Stop to finish the capture for events and voila, your test is magically created
    - Edit import statements as needed
-
-**3. Export to Project Files**
-   - Copy/Pase or Expot the Jest test file into your Project Directory
+   - Copy the tests you've created
 
 ## Additional Information
-- **exmain.dev**
-- GitHub: **github.com/oslabs-beta/Examin**
-- Contact: **examindev@gmail.com** 
+- GitHub: **github.com/pcosv/Examin**
+- Contact: **paula.vazsouza@gmail.com** 
 
 
 
