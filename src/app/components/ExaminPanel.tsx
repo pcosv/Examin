@@ -129,9 +129,6 @@ const ExaminPanel = () => {
   // Stateful functions for handling componentNames ----------------
   const [componentNames, setComponentNames] = useState([]);
   const [componentData, setComponentData] = useState([]);
-  // [app, todolist]
-  // {app: describeTest}
-  // [{app: describe, isChecked: true}, {}]
   const createComponentNamesArray = (messageString) => {
     let componentNames = [];
     let componentData = [];
@@ -164,11 +161,8 @@ const ExaminPanel = () => {
       // componentData[componentNames[i-1]] = "describe('" + strArray[i];
     }
     setCheckedComponents(checkedComps);
-    // // console.log("result of checkedComponents: ", checkedComps);
     setComponentNames(componentNames);
-    // // console.log('result of componentNames: ', componentNames);
     setComponentData(componentData);
-    // // console.log('result of componentData: ', componentData);
 
     codeFromComponentData(componentData);
   };
@@ -200,10 +194,8 @@ const ExaminPanel = () => {
   const [checkedComponents, setCheckedComponents] = React.useState([]);
 
   const handleCheckbox = (key: any) => () => {
-    // console.log("the index is ", key);
     let currComponentData = componentData;
     let currCheckedComponents = checkedComponents;
-    // // console.log(currComponentData);
     if (key === -1) {
       let tempObj = {};
       tempObj = currComponentData[0];
@@ -222,7 +214,6 @@ const ExaminPanel = () => {
         setComponentData(currComponentData);
         codeFromComponentData(currComponentData);
       }
-      // console.log(currComponentData);
     } else {
       let tempObj = {};
       tempObj = currComponentData[key + 1];
@@ -245,7 +236,6 @@ const ExaminPanel = () => {
         setComponentData(currComponentData);
         codeFromComponentData(currComponentData);
       }
-      // console.log(currComponentData);
     }
   };
   // ---------------------------------------------------------------
@@ -264,16 +254,10 @@ const ExaminPanel = () => {
 
     port.onMessage.addListener((message) => {
       // Update code displayed on Examin panel
-      // // console.log('message: ', message);
-      // console.log("useeffect fired");
       // Start handling componentNames
       let text = message;
       createComponentNamesArray(text);
       setCheckedImport(true);
-      // let compData = componentData;
-      // // console.log(compData);
-      // codeFromComponentData(compData);
-      // setCode(message);
     });
   }, []);
 
@@ -291,9 +275,6 @@ const ExaminPanel = () => {
 
   // handleSubmitRootDir submits user input (root-directory-name)
   const handleSubmitRootDir = () => {
-    // setUserRootInput('');
-    // // console.log('user root input', userRootInput);
-    // let text = code;
     port.postMessage({
       name: "submitRootDir",
       tabId: chrome.devtools.inspectedWindow.tabId,

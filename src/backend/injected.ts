@@ -12,38 +12,31 @@ import treeTraversal from './treeTraversal';
 
 const dev = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
 
-let currMemoizedState;
+const userInput = '';
 
-let userInput = '';
-// -----------------------------------------------------------------------------------
-// Initializineg a message object which will be sent to content.js
-const msgObj = { type: 'addTest', message: [] };
-// -----------------------------------------------------------------------------------
-
-// Logic for pause/recording -----------------------------------------------------
-const mode = {
-	paused: false,
-};
+let selectedComponent = 0;
 
 // -----------------------------------------------------------------------------------
 // Save fiberNode on load
-let fiberNode = dev.getFiberRoots(1).values().next().value.current.child;
-// console.log('fiberNode on load:', fiberNode);
+const fiberNode = dev.getFiberRoots(1).values().next().value.current.child;
 // -----------------------------------------------------------------------------------
 
 // Listens to messages from content.js
 const handleMessage = (request) => {
 	if (request.data.name === 'pauseClicked') {
-		mode.paused = true;
+		const componentInfo = createComponentsInfoArray(fiberNode, userInput);
+		createAndSendCurrentDOM(componentInfo[selectedComponent], 'afterDOM');
+		window.removeEventListener('click', handleNewEvent);
+		window.removeEventListener('keydown', handleNewEvent);
 	}
 	if (request.data.name === 'recordClicked') {
-		mode.paused = false;
+		window.addEventListener('click', handleNewEvent);
+		window.addEventListener('keydown', handleNewEvent);
+		const componentInfo = createComponentsInfoArray(fiberNode, userInput);
+		createAndSendCurrentDOM(componentInfo[selectedComponent], 'beforeDOM');
 	}
-	// Handle logic for
-	if (request.data.name === 'submitRootDir') {
-		userInput = request.data.userInput;
-		// makes the tests and puts it into the examin window - ensuring refresh
-		createAndSendTestArray(fiberNode, userInput)
+	if (request.data.name === 'selectedComponent') {
+		selectedComponent = request.data.message;
 	}
 };
 
@@ -70,14 +63,16 @@ const handleNewEvent = (e) => {
 
 const handleClicks = (e) => {
 	lastEvent = 'click';
-	const testRTL = `userEvent.click(screen.getByTestId('${e.target.attributes['data-test'].value}'))`;
-	(testRTL);
+	const testRTL = `userEvent.click(screen.getByTestId('${e.target.attributes['data-test'].value}'));`;
+	const msgObj = { type: 'newTestStep', message: testRTL };
+	window.postMessage(msgObj, '*');
 }
 
 const handleKeydown = (id, text) => {
-	const testRTL = `userEvent.type(screen.getByTestId('${id}'), ${text})`;
+	const testRTL = `userEvent.type(screen.getByTestId('${id}'), '${text}');`;
+	const msgObj = { type: 'newTestStep', message: testRTL };
+	window.postMessage(msgObj, '*');
 	resetState();
-	(testRTL);
 }
 
 const resetState = () => {
@@ -87,8 +82,6 @@ const resetState = () => {
 }
 
 window.addEventListener('message', handleMessage);
-window.addEventListener('click', handleNewEvent);
-window.addEventListener('keydown', handleNewEvent);
 
 // -----------------------------------------------------------------------------------
 // findMemState returns the user's application's state
@@ -105,50 +98,27 @@ const findMemState = ( node : FiberNode) => {
 	return node.memoizedState;
 };
 
-// the createAndSendTestArray will use the fibernode and user input (root directory) to generate the array of
-// test strings and send that array to the panel to be rendered
-const createAndSendTestArray = (node : FiberNode, rootDirectory : string) => {
-	//the imported treeTraversal function generates the array of objects needed by testGenerator to create the tests
-	const testInfoArray = treeTraversal(node, rootDirectory);
-	console.log(testInfoArray);
-	// testGenerator uses that array to create the array of test strings 
-	const tests = testGenerator(testInfoArray);
-	console.log(tests);
-	// those testStrings are added to the msgObj object, which is then sent to the examin panel
-	msgObj.message = tests; // msgObj = {type: 'addTest', message: []}
+const createAndSendCurrentDOM = (componentInfo: ComponentInfo, type: string) => {
+	const tests = testGenerator([componentInfo]);
+	const msgObj = { type: type, message: tests };
 	window.postMessage(msgObj, '*');	
 }
 
+const createAndSendComponentNamesArray = (componentInfo: ComponentInfo[]) => {
+	const names = [];
+	for (let i = 0; i < componentInfo.length; i++) {
+		names.push(componentInfo[i].name);
+	}
+	const msgObj = { type: 'components', message: names };
+	window.postMessage(msgObj, '*');
+}
+
+const createComponentsInfoArray = (node : FiberNode, rootDirectory : string) => {
+	const nodesInfoArray = treeTraversal(node, rootDirectory);	
+	return nodesInfoArray;
+}
 
 // -----------------------------------------------------------------------------------
-// Generate tests for default state
-createAndSendTestArray(fiberNode, userInput)
-// -----------------------------------------------------------------------------------
-
-// onCommitFiberRoot is USED TO TRACK STATE CHANGES ----------------------------------------
-// patching / rewriting the onCommitFiberRoot functionality
-// onCommitFiberRoot runs functionality every time there is a change to the page
-dev.onCommitFiberRoot = (function (original) {
-	// console.log('original test', original)
-	return function (...args) {
-		if (!mode.paused) {
-			// Reassign fiberNode when onCommitFiberRoot is invoked
-			fiberNode = args[1].current.child;
-
-			// save newMemState
-			const newMemState = findMemState(fiberNode);
-
-			// initialize a stateChange variable as a boolean which will tell if state changed or not
-			// onCommitFiberRoot will run every time the user interacts with the page, regardless of if
-			// that interaction actually changes state
-			const stateChange =
-				JSON.stringify(newMemState) !== JSON.stringify(currMemoizedState);
-			// Run the test generation function only if the state has actually changed
-			if (stateChange) {
-				createAndSendTestArray(fiberNode, userInput);
-				currMemoizedState = newMemState;				
-			}
-		}
-	};
-})(dev.onCommitFiberRoot); 
+const componentInfo = createComponentsInfoArray(fiberNode, userInput);
+createAndSendComponentNamesArray(componentInfo);
 // -----------------------------------------------------------------------------------

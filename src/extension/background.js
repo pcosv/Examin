@@ -13,7 +13,7 @@ let joinedMsg = 'loading...';
 
 // Chrome on connecting to the Examin Panel, add an Listener
 chrome.runtime.onConnect.addListener((port) => {
-	// console.log('in port connection: ', port);
+	console.log('in port connection: ', port);
 	// create a new variable for a listener function
 	const listenerForDevtool = (msg, sender, sendResponse) => {
 		// msg = request
@@ -37,17 +37,25 @@ chrome.runtime.onConnect.addListener((port) => {
 				tabId: msg.tabId,
 			});
 		} else if (msg.name === 'pauseClicked' && msg.tabId) {
-			// console.log('background.js hears pauseClicked!');
+			console.log('background.js hears pauseClicked!');
 			// Chrome sends a message to the tab at tabId to content.js with a shape of
 			// request = { name: 'pauseClicked ' }
 			chrome.tabs.sendMessage(msg.tabId, msg);
 		} else if (msg.name === 'recordClicked' && msg.tabId) {
-			// console.log('background.js hears recordClicked!');
+			console.log('background.js hears recordClicked!');
 			// Chrome sends a message to the tab at tabId to content.js with a shape of
 			// request = { name: 'recordClicked' }
 			chrome.tabs.sendMessage(msg.tabId, msg);
 		} else if (msg.name === 'submitRootDir') {
-			// console.log('background.js hears submitRootDir!');
+			console.log('background.js hears submitRootDir!');
+			// console.log('user input', msg.userInput);
+			chrome.tabs.sendMessage(msg.tabId, msg);
+		} else if (msg.name === 'newTestStep') {
+			console.log('background.js hears newTestStep!');
+			// console.log('user input', msg.userInput);
+			chrome.tabs.sendMessage(msg.tabId, msg);
+		} else if (msg.name === 'selectedComponent') {
+			console.log('background.js hears selectedComponent!');
 			// console.log('user input', msg.userInput);
 			chrome.tabs.sendMessage(msg.tabId, msg);
 		}
@@ -67,7 +75,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	if (request.type === 'SIGN_CONNECT') {
 		return true;
 	}
-	// // console.log(request.action)
 
 	const { action, message } = request;
 	const tabId = sender.tab.id;
@@ -96,17 +103,49 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 			// console.log('after injectScript ran, finished injecting');
 			break;
 		}
-		// Where action = 'addTest', and message = testArray;
-		// shape of message being recieve = { action: 'addTest', message: [(testArray)] }
-		case 'addTest': {
-			// console.log('received addTest');
-			// console.log('The request message is: ', message);
-			joinedMsg = message.join('');
+		case 'components': {
+			console.log('The request message is: ', request);
 			// Sending another message to the front-end examin panel (at the current tab)
 			// Access tabId property on connections object and posting a message to Examin frontend panel
 			// connections[tabId] value is the id of user’s application’s tab
 			if (connections[tabId.toString()]) {
-				connections[tabId.toString()].postMessage(joinedMsg);
+				connections[tabId.toString()].postMessage({
+					type: action,
+					message: message
+				});
+			}
+
+			break;
+		}
+		case 'newTestStep': {
+			console.log('The request message is: ', request);
+			if (connections[tabId.toString()]) {
+				connections[tabId.toString()].postMessage({
+					type: action,
+					message: message
+				});
+			}
+
+			break;
+		}
+		case 'beforeDOM': {
+			console.log('The request message is: ', request);
+			if (connections[tabId.toString()]) {
+				connections[tabId.toString()].postMessage({
+					type: action,
+					message: message
+				});
+			}
+
+			break;
+		}
+		case 'afterDOM': {
+			console.log('The request message is: ', request);
+			if (connections[tabId.toString()]) {
+				connections[tabId.toString()].postMessage({
+					type: action,
+					message: message
+				});
 			}
 
 			break;

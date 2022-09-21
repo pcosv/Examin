@@ -10,10 +10,28 @@ let firstRun = true;
 // Listener for Frontend to Backend ---------------------------------------
 // Window Listening for messeges in the window, if it recieves a 'message' (listening for injected.js)
 window.addEventListener('message', (request, sender, sendResponse) => {
-	// the shape of request.data = { type: 'addTest', message: [(testArray)] }
-	if (request.data.type === 'addTest') {
-		// console.log('in content.js, request.data: ', request.data);
-		// Send a message to background.js with the shape { action: 'addTest', message: [(testArray)] }
+	// if (request.data.type === 'addTest') {
+	if (request.data.type === 'components') {
+		return chrome.runtime.sendMessage({
+			action: request.data.type,
+			message: request.data.message,
+		});
+	}
+	if (request.data.type === 'newTestStep') {
+		return chrome.runtime.sendMessage({
+			action: request.data.type,
+			message: request.data.message,
+		});
+	}
+	if (request.data.type === 'beforeDOM') {
+		console.log('in content.js, request.data: ', request.data);
+		return chrome.runtime.sendMessage({
+			action: request.data.type,
+			message: request.data.message,
+		});
+	}
+	if (request.data.type === 'afterDOM') {
+		console.log('in content.js, request.data: ', request.data);
 		return chrome.runtime.sendMessage({
 			action: request.data.type,
 			message: request.data.message,
@@ -29,7 +47,7 @@ chrome.runtime.onMessage.addListener((request) => {
 
 	if (request.name === 'initial panel load') {
 		// Send a message back to background.js to initialize the initial state
-		// console.log('In initial panel load!');
+		console.log('In initial panel load!');
 		chrome.runtime.sendMessage({ action: 'initial panel load' });
 	} else if (request.name === 'pauseClicked' && request.tabId) {
 		// Send a postMessage to window to forward request to injected.js
@@ -39,6 +57,11 @@ chrome.runtime.onMessage.addListener((request) => {
 		window.postMessage(request, '*');
 	} else if (request.name === 'submitRootDir' && request.tabId) {
 		// Send a postMessage to window to forward request to injected.js
+		console.log('submitRootDir!!!');
+		window.postMessage(request, '*');
+	} else if (request.name === 'selectedComponent' && request.tabId) {
+		// Send a postMessage to window to forward request to injected.js
+		console.log('selectedComponent!!!');
 		window.postMessage(request, '*');
 	}
 });

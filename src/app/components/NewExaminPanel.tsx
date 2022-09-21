@@ -9,7 +9,6 @@ import {
   Tab,
   Typography,
   FormControl,
-  InputLabel,
   MenuItem,
   Select,
   TextField,
@@ -54,6 +53,131 @@ const ExaminPanel = () => {
   };
   // ---------------------------------------------------------------
 
+  // Get component names and tests ---------------------------------
+  const [code, setCode] = useState("// No tests yet, select a component to start");
+  const [componentNames, setComponentNames] = useState([]);
+  const [selectedComponent, setSelectedComponent] = useState("");
+  const [testName, setTestName] = useState("");
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [events, setEvents] = useState([] as string[]);
+  const [beforeDOM, setBeforeDOM] = useState([] as string[]);
+  const [afterDOM, setAfterDOM] = useState([] as string[]);
+  // console.log(`\nselected component: `, selectedComponent, `\ntest name: `, testName, `\nis recording: `, isPlaying, `\ncomponents: `, componentNames, `\nevents so far: `, events);
+
+  const port = chrome.runtime.connect({ name: "examin-demo" });
+
+  useEffect(() => {
+    port.postMessage({
+      name: "connect",
+      tabId: chrome.devtools.inspectedWindow.tabId,
+    });
+
+    port.onMessage.addListener((message) => {
+      if (message.type === "components") {
+        setComponentNames(message.message);
+      } else if (message.type === "newTestStep") {
+        setEvents(prevState => [...prevState, message.message]);
+      } else if (message.type === "beforeDOM") {
+        setBeforeDOM(message.message);
+      } else if (message.type === "afterDOM") {
+        setAfterDOM(message.message);
+      }
+    });
+  }, []);
+  // ---------------------------------------------------------------  
+
+  // Handle update name of the test --------------------------------
+  const handleTestNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setTestName(event.target.value);
+  };
+  // ---------------------------------------------------------------
+
+  // Handle update test selected -----------------------------------
+  const handleSelectedTestChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedComponent(componentNames[event.target.value]);
+    port.postMessage({
+      name: "selectedComponent",
+      tabId: chrome.devtools.inspectedWindow.tabId,
+      message: event.target.value
+    });
+  };
+  // ---------------------------------------------------------------
+
+  // Play / Stop recording button ----------------------------------
+
+  const onToggleRecording = () => {
+    if (!isPlaying) {
+      // Before everything, save the current state of the DOM
+
+      // Send message to add listeners
+      port.postMessage({
+        name: "recordClicked",
+        tabId: chrome.devtools.inspectedWindow.tabId,
+      });
+    } else {
+      // After everything, save the current state of the DOM
+
+      // Send message to remove listeners
+      port.postMessage({
+        name: "pauseClicked",
+        tabId: chrome.devtools.inspectedWindow.tabId,
+      });
+      const { given, then } = createGivenThenSteps(beforeDOM, afterDOM);
+      createTestString(selectedComponent, testName, events, given, then);
+    }
+    setIsPlaying(!isPlaying);
+  };
+  // ---------------------------------------------------------------
+
+  // Create test string --------------------------------------------
+  const createTestString = (componentName: string, testName: string, steps: string[], given: string[], then: string[]) => {
+    // TODO: handle imports and component rendering
+    const indentedSteps = indent(steps.join("\n"), 1, 2);
+    const givenSteps = indent(given.join("\n"), 1, 2);
+    const thenSteps = indent(then.join("\n"), 1, 2);
+    const finalText = `
+describe('${componentName} Component', () => {
+  it('${testName}', () => {
+  ${givenSteps}
+  ${indentedSteps}
+  ${thenSteps}
+  });
+});`;
+    setCode(finalText);
+  }
+
+  function indent(str, numOfIndents, opt_spacesPerIndent) {
+    str = str.replace(/^(?=.)/gm, new Array(numOfIndents + 1).join('\t'));
+    numOfIndents = new Array(opt_spacesPerIndent + 1 || 0).join(' '); // re-use
+    return opt_spacesPerIndent
+      ? str.replace(/^\t+/g, function(tabs) {
+          return tabs.replace(/./g, numOfIndents);
+      })
+      : str;
+  }
+
+  // ---------------------------------------------------------------
+
+  // Create given/then test steps ----------------------------------
+  const createGivenThenSteps = (beforeDOM: string[], afterDOM: string[]) => {
+    const given = beforeDOM;
+    const then = afterDOM;
+    for (let i = 0; i < afterDOM.length; i++) {
+      if (beforeDOM.includes(afterDOM[i])) {
+        const indexA = given.indexOf(afterDOM[i]);
+        given.splice(indexA, 1);
+        const indexB = then.indexOf(afterDOM[i]);
+        then.splice(indexB, 1);
+      }
+    }
+    console.log(given, then);
+    return { given, then };
+  }
+
+  // ---------------------------------------------------------------
+
+
+
   return (
     <div className={classes.root}>
       <AppBar
@@ -93,21 +217,27 @@ const ExaminPanel = () => {
           <Select
             labelId="select-label"
             id="select-component"
-            onChange={() => void 0}
+            onChange={handleSelectedTestChange}
             variant="outlined"
           >
-            <MenuItem value="Component 1">Component 1</MenuItem>
-            <MenuItem value="Component 2">Component 2</MenuItem>
-            <MenuItem value="Component 3">Component 3</MenuItem>
+            {componentNames.map((name, index) => (
+              <MenuItem key={`${name}${index}`} value={index}>{name}</MenuItem>
+          ))}
           </Select>
 
           <Typography className={classes.section}>Give a name to your test</Typography>
-          <TextField id="input-test-name" variant="outlined" />
+          <TextField id="input-test-name" variant="outlined" onChange={handleTestNameChange} value={testName} />
 
-          <Button variant="outlined" className={classes.section}>Start recording</Button>
+          <Button
+            variant="outlined"
+            className={classes.section}
+            onClick={onToggleRecording}
+          >
+            {!isPlaying ? "Start recording" : "Stop recording"}
+          </Button>
 
           <Typography className={classes.section}>Here is your test suite</Typography>
-          <Editor language="javascript" value='// No tests yet, select a component to start'></Editor>
+          <Editor language="javascript" value={code}></Editor>
         </FormControl>
       </TabPanel>
       

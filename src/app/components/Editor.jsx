@@ -16,6 +16,7 @@ export default function Editor(props) {
 
 	return (
 		<ControlledEditor
+			editable={true}
 			onBeforeChange={handleChange}
 			value={value}
 			options={{
