@@ -34,4 +34,4 @@ type FiberNode = {
 
 type TreeTraversal = ( fiberNode : FiberNode, rootDirectory : string) => Array<ComponentInfo>
 
-type TestGenerator = ( componentData: Array<ComponentInfo> ) => Array<string>
+type TestGenerator = ( componentData: Array<ComponentInfo> ) => { setup: Array<string>, tests: Array<string>}

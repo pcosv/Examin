@@ -30,7 +30,9 @@ const grabComponentChildInfo = (node: FiberNode) => {
 		componentName: '',
 	};
 	// assign the component name key of that object to the name of the passed in node
-	componentChildInfo.componentName = node.elementType.name;
+	if (node.child.memoizedProps[`data-test`]) {
+		componentChildInfo.componentName = node.child.memoizedProps[`data-test`];
+	}
 	return componentChildInfo;
 };
 
@@ -42,12 +44,14 @@ const grabHtmlChildInfo = (node: FiberNode) => {
 		elementType: '',
 	};
 	// assign the elementType of the node to that key in the htmlChildInfo object
-	htmlChildInfo.elementType = node.elementType;
+	if (node.memoizedProps[`data-test`]) {
+		htmlChildInfo.elementType = node.memoizedProps[`data-test`];
+	}
 	// conditional to check if the html component is a container which will include other components
 	// If so, the innerText will not be used. This also needs to check if there is a statenode key, which is what stores the innerText
 	if (
-		htmlChildInfo.elementType !== 'div' &&
-		htmlChildInfo.elementType !== 'ul' &&
+		node.elementType !== 'div' &&
+		node.elementType !== 'ul' &&
 		node.stateNode
 	) {
 		htmlChildInfo.innerText = node.stateNode.innerText;

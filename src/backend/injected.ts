@@ -1,7 +1,6 @@
 // This file contains the main logic that accesses the user's React application's state
 // Stores state on load
 // Uses React Dev Tools Global Hook to track state changes based on user interactions
-// console.log('Currently in injected.js');
 
 // any declaration is necessary here because the window will only have the react devtools global hook
 // property once the page is loading into a chrome browser with the 
@@ -25,7 +24,7 @@ const fiberNode = dev.getFiberRoots(1).values().next().value.current.child;
 const handleMessage = (request) => {
 	if (request.data.name === 'pauseClicked') {
 		const componentInfo = createComponentsInfoArray(fiberNode, userInput);
-		createAndSendCurrentDOM(componentInfo[selectedComponent], 'afterDOM');
+		createAndSendAfterDOM(componentInfo[selectedComponent], 'afterDOM');
 		window.removeEventListener('click', handleNewEvent);
 		window.removeEventListener('keydown', handleNewEvent);
 	}
@@ -33,7 +32,7 @@ const handleMessage = (request) => {
 		window.addEventListener('click', handleNewEvent);
 		window.addEventListener('keydown', handleNewEvent);
 		const componentInfo = createComponentsInfoArray(fiberNode, userInput);
-		createAndSendCurrentDOM(componentInfo[selectedComponent], 'beforeDOM');
+		createAndSendBeforeDOM(componentInfo[selectedComponent], 'beforeDOM');
 	}
 	if (request.data.name === 'selectedComponent') {
 		selectedComponent = request.data.message;
@@ -98,8 +97,14 @@ const findMemState = ( node : FiberNode) => {
 	return node.memoizedState;
 };
 
-const createAndSendCurrentDOM = (componentInfo: ComponentInfo, type: string) => {
-	const tests = testGenerator([componentInfo]);
+const createAndSendBeforeDOM = (componentInfo: ComponentInfo, type: string) => {
+	const { setup, tests } = testGenerator([componentInfo]);
+	const msgObj = { type: type, message: [...setup, ...tests] };
+	window.postMessage(msgObj, '*');	
+}
+
+const createAndSendAfterDOM = (componentInfo: ComponentInfo, type: string) => {
+	const { tests } = testGenerator([componentInfo]);
 	const msgObj = { type: type, message: tests };
 	window.postMessage(msgObj, '*');	
 }

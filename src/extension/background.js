@@ -4,7 +4,6 @@
 
 // In background.js, messages are analogous to requests
 
-// console.log('logging in background.js');
 
 const connections = {};
 
@@ -13,50 +12,23 @@ let joinedMsg = 'loading...';
 
 // Chrome on connecting to the Examin Panel, add an Listener
 chrome.runtime.onConnect.addListener((port) => {
-	console.log('in port connection: ', port);
-	// create a new variable for a listener function
 	const listenerForDevtool = (msg, sender, sendResponse) => {
-		// msg = request
-		// creates a new key/value pair of current window & devtools tab
-
-		// Initial request (or msg) shape = {
-		//   name: 'connect',
-		//   tabId: chrome.devtools.inspectedWindow.tabId,
-		// }
 		if (msg.name === 'connect' && msg.tabId) {
-			// on
-			// console.log('The tabId is: ', msg.tabId);
+			
 			connections[msg.tabId] = port;
-
-			// Chrome sends a message to the tab at tabId to content.js with a shape of
-			// request = { name: 'initial page load', tabId: msg.tabId }
-			// connections[msg.tabId].postMessage(joinedMsg);
-
 			chrome.tabs.sendMessage(msg.tabId, {
 				name: 'initial panel load',
 				tabId: msg.tabId,
 			});
 		} else if (msg.name === 'pauseClicked' && msg.tabId) {
-			console.log('background.js hears pauseClicked!');
-			// Chrome sends a message to the tab at tabId to content.js with a shape of
-			// request = { name: 'pauseClicked ' }
 			chrome.tabs.sendMessage(msg.tabId, msg);
 		} else if (msg.name === 'recordClicked' && msg.tabId) {
-			console.log('background.js hears recordClicked!');
-			// Chrome sends a message to the tab at tabId to content.js with a shape of
-			// request = { name: 'recordClicked' }
 			chrome.tabs.sendMessage(msg.tabId, msg);
 		} else if (msg.name === 'submitRootDir') {
-			console.log('background.js hears submitRootDir!');
-			// console.log('user input', msg.userInput);
 			chrome.tabs.sendMessage(msg.tabId, msg);
 		} else if (msg.name === 'newTestStep') {
-			console.log('background.js hears newTestStep!');
-			// console.log('user input', msg.userInput);
 			chrome.tabs.sendMessage(msg.tabId, msg);
 		} else if (msg.name === 'selectedComponent') {
-			console.log('background.js hears selectedComponent!');
-			// console.log('user input', msg.userInput);
 			chrome.tabs.sendMessage(msg.tabId, msg);
 		}
 	};
@@ -64,9 +36,6 @@ chrome.runtime.onConnect.addListener((port) => {
 	// consistently listening on open port
 	port.onMessage.addListener(listenerForDevtool);
 
-	// // console.log("port.sender is: ", port.sender);
-	// console.log('Listing from devtool successfully made');
-	// chrome.runtime.sendMessage({ action: 'testMessage' });
 });
 
 // Chrome listening for messages (from content.js?)
@@ -83,7 +52,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	switch (action) {
 		case 'injectScript': {
 			// Injects injected.js into the body element of the user's application
-			// console.log('injecting script to the current tab');
 
 			chrome.tabs.executeScript(tabId, {
 				code: `
@@ -100,7 +68,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         `,
 			});
 
-			// console.log('after injectScript ran, finished injecting');
 			break;
 		}
 		case 'components': {
@@ -151,7 +118,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 			break;
 		}
 		case 'initial panel load': {
-			// console.log('received initial panel load in background.js');
 			connections[tabId.toString()].postMessage(joinedMsg);
 		}
 		default:

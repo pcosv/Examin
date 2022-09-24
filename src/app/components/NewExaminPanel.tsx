@@ -62,7 +62,6 @@ const ExaminPanel = () => {
   const [events, setEvents] = useState([] as string[]);
   const [beforeDOM, setBeforeDOM] = useState([] as string[]);
   const [afterDOM, setAfterDOM] = useState([] as string[]);
-  // console.log(`\nselected component: `, selectedComponent, `\ntest name: `, testName, `\nis recording: `, isPlaying, `\ncomponents: `, componentNames, `\nevents so far: `, events);
 
   const port = chrome.runtime.connect({ name: "examin-demo" });
 
@@ -84,6 +83,12 @@ const ExaminPanel = () => {
       }
     });
   }, []);
+
+  useEffect(() => {
+    const { given, then } = createGivenThenSteps(beforeDOM, afterDOM);
+    createTestString(selectedComponent, testName, events, given, then);
+  }, [afterDOM]);
+
   // ---------------------------------------------------------------  
 
   // Handle update name of the test --------------------------------
@@ -122,8 +127,6 @@ const ExaminPanel = () => {
         name: "pauseClicked",
         tabId: chrome.devtools.inspectedWindow.tabId,
       });
-      const { given, then } = createGivenThenSteps(beforeDOM, afterDOM);
-      createTestString(selectedComponent, testName, events, given, then);
     }
     setIsPlaying(!isPlaying);
   };
@@ -135,12 +138,18 @@ const ExaminPanel = () => {
     const indentedSteps = indent(steps.join("\n"), 1, 2);
     const givenSteps = indent(given.join("\n"), 1, 2);
     const thenSteps = indent(then.join("\n"), 1, 2);
-    const finalText = `
-describe('${componentName} Component', () => {
+    const finalText = `import React from 'react';
+import { render, waitFor, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+
+describe('${componentName} Component test suite', () => {
   it('${testName}', () => {
   ${givenSteps}
   ${indentedSteps}
-  ${thenSteps}
+
+    await waitFor(() => {
+      ${thenSteps}
+    });
   });
 });`;
     setCode(finalText);
@@ -160,8 +169,8 @@ describe('${componentName} Component', () => {
 
   // Create given/then test steps ----------------------------------
   const createGivenThenSteps = (beforeDOM: string[], afterDOM: string[]) => {
-    const given = beforeDOM;
-    const then = afterDOM;
+    const given = [...beforeDOM];
+    const then = [...afterDOM];
     for (let i = 0; i < afterDOM.length; i++) {
       if (beforeDOM.includes(afterDOM[i])) {
         const indexA = given.indexOf(afterDOM[i]);
@@ -170,7 +179,6 @@ describe('${componentName} Component', () => {
         then.splice(indexB, 1);
       }
     }
-    console.log(given, then);
     return { given, then };
   }
 
